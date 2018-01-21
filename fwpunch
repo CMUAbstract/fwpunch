@@ -2,22 +2,6 @@
 
 source $1
 
-if [ ! -z "$FWP_USER" ]
-then
-	CRED=$FWP_USER
-fi
-if [[ ! -z "$CRED" && ! -z "$FWP_PASSWORD" ]]
-then
-	CRED=$CRED:$FWP_PASSWORD
-fi
-if [ ! -z "$CRED" ]
-then
-	CRED=$CRED@
-fi
-HQ_URL=http://${CRED}${FWP_HOST}/$(hostname).txt
-echo $HQ_URL
-exit 0
-
 function kill_ssh {
 	if [ ! -z "$SSH_PID" ]
 	then
