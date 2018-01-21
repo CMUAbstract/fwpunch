@@ -1,12 +1,20 @@
 post_install() {
+    FWHOME=/var/lib/fwpunch
     getent passwd fwpunch &>/dev/null || {
         echo -n ">>> Creating fwpunch user... "
-        useradd --system --user-group -m --home /var/lib/fwpunch fwpunch
+        useradd --system --user-group -m --home $FWHOME fwpunch
         echo "done"
-        echo -n ">>> Generating ssh key... "
-	sudo -u fwpunch mkdir -m 0700 /var/lib/fwpunch/.ssh
-	sudo -u fwpunch ssh-keygen -t rsa -f /var/lib/fwpunch/.ssh/id_rsa
-        echo "done"
-        echo -n ">>> Copy this key to the server: /var/lib/fwpunch/.ssh/id_rsa.pub"
+	if [ ! -e $FWHOME/.ssh/id_rsa ]
+	then
+		echo -n ">>> Generating ssh key... "
+		sudo -u fwpunch mkdir -p -m 0700 $FWHOME/.ssh
+		sudo -u fwpunch ssh-keygen -t rsa -P "" -f $FWHOME/.ssh/id_rsa
+		echo "done"
+		echo -n ">>> Copy this key to the server: $FWHOME/.ssh/id_rsa.pub"
+		echo -n ">>> Add server signature to: $FWHOME/.ssh/known_hosts"
+	fi
     } # NOTE: do not remove user on uninstall, to not leave dangling files
+
+    mkdir -p /etc/fwpunch
+    chown fwpunch:fwpunch /etc/fwpunch
 }
