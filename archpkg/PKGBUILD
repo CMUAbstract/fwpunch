@@ -1,0 +1,34 @@
+
+# Maintainer: Alexei Colin <ac@alexeicolin.com>
+
+pkgname=fwpunch
+
+pkgver=r.
+pkgrel=1
+pkgdesc='Firewall punching service'
+arch=('armv7h' 'aarch64' 'x86_64' 'i686')
+url='http://github.com/CMUAbstract/fwpunch.git'
+license=('custom:Unlicense')
+depends=('openssh' 'curl')
+source=()
+
+md5sums=()
+
+install=fwpunch.install
+
+prepare() {
+    ln -snf "$startdir/.." "$srcdir/$pkgname"
+}
+
+pkgver() {
+    cd "${srcdir}/${pkgname}"
+    printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+package() {
+    cd "${srcdir}/${pkgname}"
+
+    install -Dm755 fwpunch $pkgdir/usr/bin/fwpunch
+    install -Dm644 fwpunch@.service $pkgdir/usr/lib/systemd/system/fwpunch@.service
+    install -Dm644 example.conf $pkgdir/usr/share/fwpunch/example.conf
+}

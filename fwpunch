@@ -1,0 +1,64 @@
+#!/usr/bin/bash
+
+source $1
+
+if [ ! -z "$FWP_USER" ]
+then
+	CRED=$FWP_USER
+fi
+if [[ ! -z "$CRED" && ! -z "$FWP_PASSWORD" ]]
+then
+	CRED=$CRED:$FWP_PASSWORD
+fi
+if [ ! -z "$CRED" ]
+then
+	CRED=$CRED@
+fi
+HQ_URL=http://${CRED}${FWP_HOST}/$(hostname).txt
+echo $HQ_URL
+exit 0
+
+function kill_ssh {
+	if [ ! -z "$SSH_PID" ]
+	then
+		echo kill $SSH_PID
+		kill $SSH_PID
+	fi
+}
+
+trap 'kill_ssh; exit 1' INT PIPE TERM
+
+LAST_USER_HOST=
+LAST_PORT=
+SSH_PID=
+while true
+do
+
+	#echo Fetching HQ server/port from $HQ_URL
+	set -- $(curl -s $HQ_URL)
+	if [[ "$2" =~ ^[0-9]+$ && "$1" =~ ^[0-9a-zA-Z-]+@[0-9a-zA-Z.-]+$ ]]
+	then
+		USER_HOST=$1
+		PORT=$2
+		if [[ ! ( "$USER_HOST" = "$LAST_USER_HOST" && "$PORT" = "$LAST_PORT" ) ]]
+		then
+			echo "HQ host/port changed, re-establishing tunnel"
+			kill_ssh
+			echo ssh -NT -R $PORT:localhost:22 $USER_HOST &
+			ssh -NT -R $PORT:localhost:22 $USER_HOST &
+			SSH_PID=$!
+			LAST_USER_HOST=$USER_HOST
+			LAST_PORT=$PORT
+			PRINTED_INVALID=0
+		fi
+	else
+		if [[ $PRINTED_INVALID == 0 ]]
+		then
+			echo Invalid HQ server/port: $1 $2
+			PRINTED_INVALID=1
+			LAST_USER_HOST=
+			LAST_PORT=
+		fi
+	fi
+	sleep 600
+done

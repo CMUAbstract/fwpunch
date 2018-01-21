@@ -1,0 +1,11 @@
+[Unit]
+Description=Punch through firewall to server %i
+
+[Service]
+User=fwpunch
+Group=fwpunch
+ExecStart=/usr/bin/fwpunch /etc/fwpunch/%i.conf
+Restart=on-abort
+
+[Install]
+WantedBy=default.target
